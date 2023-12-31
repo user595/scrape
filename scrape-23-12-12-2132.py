@@ -82,6 +82,9 @@ def download_page(url, base_path):#rename to scan_page?
 
             # Find all image tags in the HTML
             img_tags = soup.find_all('img', src=True)
+            #convert to set then back to list to remove duplicates
+            result_set = set(img_tags)
+            img_tags = list(result_set) 
             img_count = len(img_tags)
             print(f"scrape_website({url}) There are {img_count} images found.")
             img_item = 1
@@ -99,6 +102,9 @@ def download_page(url, base_path):#rename to scan_page?
 
             # Find all PDF links in the HTML
             pdf_tags = soup.find_all('a', href=True)
+            #convert to set then back to list to remove duplicates
+            result_set = set(pdf_tags)
+            pdf_tags = list(result_set) 
             pdf_count = len(pdf_tags)
             print(f"scrape_website({url}) There are {pdf_count} pdfs found.")
             pdf_item = 1
@@ -157,9 +163,17 @@ def scrape_website(pweb_address):
         soup = BeautifulSoup(response.text, 'html.parser')
         # Find all links on the page
         links = soup.find_all('a', href=True)
+        #convert to set then back to list to remove duplicates
+        result_set = set(links)
+        links = list(result_set) 
         links_count = len(links)
         print(f"scrape_website({pweb_address}) There are {links_count} links found.")
         links_item = 1
+        
+        #force to NOT download linked pages
+        #print("forcing to NOT download linked pages")
+        #links.clear()
+        
         for link in links:
             print(f"Processing {pweb_address} link {links_item} of {links_count}")
             link_url = link['href']
@@ -171,38 +185,50 @@ def scrape_website(pweb_address):
             logging.info(f"Downloading page: {absolute_url}")
 
             # Download each linked webpage
+            #working function but want to temp limit to the specified page only
+            #not downloading the linked pages - works but slow
             download_page(absolute_url, output_folder)
-
-            #download the items on the main page
-            #should also download all pdfs
-            # Find all image tags in the HTML
-            img_tags = soup.find_all('img', src=True)
-            for img_tag in img_tags:
-                # Construct absolute image URL using urljoin
-                img_url = urljoin(pweb_address, img_tag['src'])
-
-                # Log the image URL before downloading
-                logging.info(f"Downloading image: {img_url}")
-
-                # Download each image
-                download_file(img_url, output_folder)
-
-                # Find all PDF links in the HTML
-                pdf_tags = soup.find_all('a', href=True)
-                pdf_count = len(pdf_tags)
-                print(f"scrape_website({pweb_address}) There are {pdf_count} pdfs found.")
-                pdf_item = 1
-                for pdf_tag in pdf_tags:
-                    print(f"pdf_item:{pdf_item}",end='')
-                    pdf_url = urljoin(pweb_address, pdf_tag['href'])
-    
-                    # Log the PDF URL before downloading
-                    logging.info(f"Downloading PDF: {pdf_url}")
-    
-                    # Download each PDF
-                    download_file(pdf_url, output_folder)
-                    pdf_item = pdf_item + 1
             links_item = links_item + 1
+
+
+        #download the items on the main page
+        # Find all image tags in the HTML
+        img_tags = soup.find_all('img', src=True)
+        #convert to set then back to list to remove duplicates
+        result_set = set(img_tags)
+        img_tags = list(result_set) 
+        img_count = len(img_tags)
+        img_item = 1
+        for img_tag in img_tags:
+            print(f"Processing {pweb_address} img {img_item} of {img_count}")
+            # Construct absolute image URL using urljoin
+            img_url = urljoin(pweb_address, img_tag['src'])
+
+            # Log the image URL before downloading
+            logging.info(f"Downloading image: {img_url}")
+
+            # Download each image
+            download_file(img_url, output_folder)
+            img_item = img_item + 1
+
+        # Find all PDF links in the HTML
+        pdf_tags = soup.find_all('a', href=True)
+        #convert to set then back to list to remove duplicates
+        result_set = set(pdf_tags)
+        pdf_tags = list(result_set) 
+        pdf_count = len(pdf_tags)
+        print(f"scrape_website({pweb_address}) There are {pdf_count} pdfs found.")
+        pdf_item = 1
+        for pdf_tag in pdf_tags:
+            print(f"Processing {pweb_address} pdf {pdf_item} of {pdf_count}")
+            pdf_url = urljoin(pweb_address, pdf_tag['href'])
+
+            # Log the PDF URL before downloading
+            logging.info(f"Downloading PDF: {pdf_url}")
+
+            # Download each PDF
+            download_file(pdf_url, output_folder)
+            pdf_item = pdf_item + 1
     else:
         print(f"Failed to fetch main page: {pweb_address}")
 
@@ -215,10 +241,12 @@ if __name__ == "__main__":
 
     # Add an argument for specifying the logging level
     parser.add_argument(
-        "path",help="the http path"
+        "--path",
+        help="the http path i.e. https://www.pollardbanknote.com/company/",
+        default="https://www.pollardbanknote.com/company/"
     )
     parser.add_argument(
-        "--log-level",
+        "--loglevel",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],  # Allow only valid log levels
         default="INFO",  # Default logging level if not provided
         help="Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)"
@@ -230,11 +258,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Convert the log level argument to the corresponding logging constant
-    log_level = getattr(logging, args.log_level)
+    loglevel = getattr(logging, args.loglevel)
 
     # Set up logging configuration based on the provided log level
     #pdb.set_trace()
-    setup_logging(log_level)
+    print(f"log set to {loglevel}")
+    setup_logging(loglevel)
 
     #pdb.set_trace()
 
@@ -243,7 +272,7 @@ if __name__ == "__main__":
     #    print("Usage: python script.py <web_address>")
     #    sys.exit(1)
 
-    #web_address = sys.argv[1]#web address might be any argument 0 - ...
     web_address = args.path
+    #web_address = "https://www.lottery.ok.gov/scratchers"
     #pdb.set_trace()
     scrape_website(web_address)
