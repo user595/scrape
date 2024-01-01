@@ -2,12 +2,10 @@
 import os
 import argparse
 
-#from urllib.parse import urlparse
 from urllib.parse import urljoin, urlparse
 import logging
 
 from bs4 import BeautifulSoup
-#import sys
 import requests
 
 #import pdb
@@ -16,10 +14,8 @@ import requests
 def setup_logging(plog_level):
     """Set up logging configuration based on the provided log level."""
     logging.debug(f"setup_logging({plog_level})")
-    #pdb.set_trace()
     # Set up logging to console and file
     log_format = "%(asctime)s - %(levelname)s - %(message)s"
-    #logging.basicConfig(level=logging.DEBUG, format=log_format)
 
     # Create a folder for log files
     log_folder = 'logs'
@@ -33,10 +29,9 @@ def setup_logging(plog_level):
         format="%(asctime)s - %(levelname)s - %(message)s",  # Specify log message format
         handlers=[
             logging.StreamHandler(),  # Log to the console
-            # Add more handlers if needed (e.g., logging.FileHandler for logging to a file)
-            # Add a file handler to write logs to the file
         ]
     )
+
     file_handler = logging.FileHandler(log_file_path)
     file_handler.setFormatter(logging.Formatter(log_format))
     logging.getLogger().addHandler(file_handler)
@@ -60,22 +55,7 @@ def download_page(url, base_path):#rename to scan_page?
     # Log a debug message
     logging.debug(f"Downloading page: {url}")
 
-    #is this causing files to NOT download non-jpg png info?
-    # Check if the path is a directory
-    #if not parsed_url.path or parsed_url.path.endswith('/'):
-    #    #could recursive call function download_page with this url
-    #    logging.info(f"Skipping directory: {url}")
-    #    return
-
-    #this code causes sub-folders to not download
-    #logging.info(f"is_html_path: {url}")
-    # Check if this is a htm or html file
-    #if (is_html_path(url)==False):
-    #    logging.info(f"is_html_path: {url} False - not a htm or html file")
-    #    return;
-
-    # Continue with downloading the page
-    response = requests.get(url)
+    response = requests.get(url)#exception InvalidSchema - must fix
     if response.status_code == 200:
         try:
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -158,7 +138,7 @@ def scrape_website(pweb_address):
     os.makedirs(output_folder, exist_ok=True)
 
     # Make a request to the main page to extract links
-    response = requests.get(pweb_address)
+    response = requests.get(pweb_address)#add try except
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
         # Find all links on the page
@@ -234,16 +214,15 @@ def scrape_website(pweb_address):
 
 if __name__ == "__main__":
     logging.debug("__main__")
-    #import sys
     #pdb.set_trace()
     # Create an ArgumentParser object to handle command-line arguments
     parser = argparse.ArgumentParser(description="dynamic logging level")
 
-    # Add an argument for specifying the logging level
     parser.add_argument(
         "--path",
         help="the http path i.e. https://www.pollardbanknote.com/company/",
-        default="https://www.pollardbanknote.com/company/"
+        #default="https://www.pollardbanknote.com/company/"
+        default="https://www.lottery.ok.gov/scratchers/492108"
     )
     parser.add_argument(
         "--loglevel",
@@ -251,8 +230,6 @@ if __name__ == "__main__":
         default="INFO",  # Default logging level if not provided
         help="Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)"
     )
-
-    #pdb.set_trace()
 
     # Parse command-line arguments
     args = parser.parse_args()
@@ -265,14 +242,6 @@ if __name__ == "__main__":
     print(f"log set to {loglevel}")
     setup_logging(loglevel)
 
-    #pdb.set_trace()
-
-    # Check if a web address is provided as a command line argument
-    #if len(sys.argv) < 2:#how many arguments are there?
-    #    print("Usage: python script.py <web_address>")
-    #    sys.exit(1)
-
     web_address = args.path
-    #web_address = "https://www.lottery.ok.gov/scratchers"
     #pdb.set_trace()
     scrape_website(web_address)
