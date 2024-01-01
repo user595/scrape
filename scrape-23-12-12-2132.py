@@ -36,14 +36,6 @@ def setup_logging(plog_level):
     file_handler.setFormatter(logging.Formatter(log_format))
     logging.getLogger().addHandler(file_handler)
 
-def is_html_path(url):
-    """ return True of False - is this a htm or html path from the url """
-    parsed_url = urlparse(url)
-    path = parsed_url.path
-
-    # Check if the path ends with ".html" or ".htm"
-    return path.lower().endswith((".html", ".htm"))
-
 def scan_page(url, base_path):
     """ download a specific url"""
     # Parse the URL to extract the path
@@ -62,20 +54,25 @@ def scan_page(url, base_path):
     except requests.exceptions.RequestException as e:
             #errors related to making requests, including network errors
             print(f"Request failed: {e}")
+            logging.info(f"scan_page:requests.get({url}) exception {e}")
     except requests.exceptions.HTTPError as e:
             #errors returned by the server (e.g., 404 Not Found, 500 Internal Server Error)
             print(f"HTTP error occurred: {e}")
+            logging.info(f"scan_page:requests.get({url}) exception {e}")
     except requests.exceptions.ConnectionError as e:
             #connection-related errors, such as DNS resolution failure, network unreachable, 
             #or connection refused
             print(f"Connection error occurred: {e}")
+            logging.info(f"scan_page:requests.get({url}) exception {e}")
     except requests.exceptions.Timeout as e:
             #request times out, i.e., the server does not respond within the specified timeout period
             print(f"Request timed out: {e}")
+            logging.info(f"scan_page:requests.get({url}) exception {e}")
     except requests.exceptions.MissingSchema as e:
             #URL provided to requests.get is not well-formed (missing the scheme, 
             #e.g., "example.com" instead of "http://example.com").
             print(f"Invalid URL: {e}")
+            logging.info(f"scan_page:requests.get({url}) exception {e}")
 
     if response.status_code == 200:
         try:
@@ -139,20 +136,25 @@ def download_file(file_url, base_path):
     except requests.exceptions.RequestException as e:
             #errors related to making requests, including network errors
             print(f"Request failed: {e}")
+            logging.info(f"download_file:requests.get({file_url}) exception {e}")
     except requests.exceptions.HTTPError as e:
             #errors returned by the server (e.g., 404 Not Found, 500 Internal Server Error)
             print(f"HTTP error occurred: {e}")
+            logging.info(f"download_file:requests.get({file_url}) exception {e}")
     except requests.exceptions.ConnectionError as e:
             #connection-related errors, such as DNS resolution failure, network unreachable, 
             #or connection refused
             print(f"Connection error occurred: {e}")
+            logging.info(f"download_file:requests.get({file_url}) exception {e}")
     except requests.exceptions.Timeout as e:
             #request times out, i.e., the server does not respond within the specified timeout period
             print(f"Request timed out: {e}")
+            logging.info(f"download_file:requests.get({file_url}) exception {e}")
     except requests.exceptions.MissingSchema as e:
             #URL provided to requests.get is not well-formed (missing the scheme, 
             #e.g., "example.com" instead of "http://example.com").
             print(f"Invalid URL: {e}")
+            logging.info(f"download_file:requests.get({file_url}) exception {e}")
 
     file_path = os.path.join(base_path, file_filename)
 
@@ -179,20 +181,25 @@ def scrape_website(pweb_address):
     except requests.exceptions.RequestException as e:
             #errors related to making requests, including network errors
             print(f"Request failed: {e}")
+            logging.info(f"scrape_website:requests.get({pweb_address}) exception {e}")
     except requests.exceptions.HTTPError as e:
             #errors returned by the server (e.g., 404 Not Found, 500 Internal Server Error)
             print(f"HTTP error occurred: {e}")
+            logging.info(f"scrape_website:requests.get({pweb_address}) exception {e}")
     except requests.exceptions.ConnectionError as e:
             #connection-related errors, such as DNS resolution failure, network unreachable, 
             #or connection refused
             print(f"Connection error occurred: {e}")
+            logging.info(f"scrape_website:requests.get({pweb_address}) exception {e}")
     except requests.exceptions.Timeout as e:
             #request times out, i.e., the server does not respond within the specified timeout period
             print(f"Request timed out: {e}")
+            logging.info(f"scrape_website:requests.get({pweb_address}) exception {e}")
     except requests.exceptions.MissingSchema as e:
             #URL provided to requests.get is not well-formed (missing the scheme, 
             #e.g., "example.com" instead of "http://example.com").
             print(f"Invalid URL: {e}")
+            logging.info(f"scrape_website:requests.get({pweb_address}) exception {e}")
 
 
     if response.status_code == 200:
