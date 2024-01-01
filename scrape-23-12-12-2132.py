@@ -44,18 +44,39 @@ def is_html_path(url):
     # Check if the path ends with ".html" or ".htm"
     return path.lower().endswith((".html", ".htm"))
 
-def download_page(url, base_path):#rename to scan_page?
+def scan_page(url, base_path):
     """ download a specific url"""
     # Parse the URL to extract the path
-    #logging.debug(f"download_page({url}, {base_path})")
-    print(f"download_page({url}, {base_path})")
+    #logging.debug(f"scan_page({url}, {base_path})")
+    print(f"scan_page({url}, {base_path})")
     #pdb.set_trace()
     #parsed_url = urlparse(url)
 
     # Log a debug message
-    logging.debug(f"Downloading page: {url}")
+    logging.debug(f"scan_page: {url}")
 
-    response = requests.get(url)#exception InvalidSchema - must fix
+    try:
+        # Make a request to the main page to extract links
+        response = requests.get(url)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+            #errors related to making requests, including network errors
+            print(f"Request failed: {e}")
+    except requests.exceptions.HTTPError as e:
+            #errors returned by the server (e.g., 404 Not Found, 500 Internal Server Error)
+            print(f"HTTP error occurred: {e}")
+    except requests.exceptions.ConnectionError as e:
+            #connection-related errors, such as DNS resolution failure, network unreachable, 
+            #or connection refused
+            print(f"Connection error occurred: {e}")
+    except requests.exceptions.Timeout as e:
+            #request times out, i.e., the server does not respond within the specified timeout period
+            print(f"Request timed out: {e}")
+    except requests.exceptions.MissingSchema as e:
+            #URL provided to requests.get is not well-formed (missing the scheme, 
+            #e.g., "example.com" instead of "http://example.com").
+            print(f"Invalid URL: {e}")
+
     if response.status_code == 200:
         try:
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -115,20 +136,34 @@ def download_file(file_url, base_path):
         file_response = requests.get(file_url)
         file_response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
 
-        file_path = os.path.join(base_path, file_filename)
-
-        # Check if the file is not a directory before opening it
-        if not os.path.isdir(file_path):
-            with open(file_path, 'wb') as file_file:
-                file_file.write(file_response.content)
-
-            logging.info(f"File downloaded: {file_url}")
-        else:
-            logging.warning(f"Skipping directory: {file_url}")
     except requests.exceptions.RequestException as e:
-        # Log an error if there's an issue downloading the file
-        print(f"Failed to download file: {file_url} - {e}")
-        logging.debug(f"Failed to download file: {file_url} - {e}")
+            #errors related to making requests, including network errors
+            print(f"Request failed: {e}")
+    except requests.exceptions.HTTPError as e:
+            #errors returned by the server (e.g., 404 Not Found, 500 Internal Server Error)
+            print(f"HTTP error occurred: {e}")
+    except requests.exceptions.ConnectionError as e:
+            #connection-related errors, such as DNS resolution failure, network unreachable, 
+            #or connection refused
+            print(f"Connection error occurred: {e}")
+    except requests.exceptions.Timeout as e:
+            #request times out, i.e., the server does not respond within the specified timeout period
+            print(f"Request timed out: {e}")
+    except requests.exceptions.MissingSchema as e:
+            #URL provided to requests.get is not well-formed (missing the scheme, 
+            #e.g., "example.com" instead of "http://example.com").
+            print(f"Invalid URL: {e}")
+
+    file_path = os.path.join(base_path, file_filename)
+
+    # Check if the file is not a directory before opening it
+    if not os.path.isdir(file_path):
+        with open(file_path, 'wb') as file_file:
+            file_file.write(file_response.content)
+
+        logging.info(f"File downloaded: {file_url}")
+    else:
+        logging.warning(f"Skipping directory: {file_url}")
 
 def scrape_website(pweb_address):
     """ Create a folder to store the downloaded webpages"""
@@ -137,8 +172,29 @@ def scrape_website(pweb_address):
     output_folder = 'downloaded_pages'
     os.makedirs(output_folder, exist_ok=True)
 
-    # Make a request to the main page to extract links
-    response = requests.get(pweb_address)#add try except
+    try:
+        # Make a request to the main page to extract links
+        response = requests.get(pweb_address)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+            #errors related to making requests, including network errors
+            print(f"Request failed: {e}")
+    except requests.exceptions.HTTPError as e:
+            #errors returned by the server (e.g., 404 Not Found, 500 Internal Server Error)
+            print(f"HTTP error occurred: {e}")
+    except requests.exceptions.ConnectionError as e:
+            #connection-related errors, such as DNS resolution failure, network unreachable, 
+            #or connection refused
+            print(f"Connection error occurred: {e}")
+    except requests.exceptions.Timeout as e:
+            #request times out, i.e., the server does not respond within the specified timeout period
+            print(f"Request timed out: {e}")
+    except requests.exceptions.MissingSchema as e:
+            #URL provided to requests.get is not well-formed (missing the scheme, 
+            #e.g., "example.com" instead of "http://example.com").
+            print(f"Invalid URL: {e}")
+
+
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
         # Find all links on the page
@@ -167,7 +223,7 @@ def scrape_website(pweb_address):
             # Download each linked webpage
             #working function but want to temp limit to the specified page only
             #not downloading the linked pages - works but slow
-            download_page(absolute_url, output_folder)
+            scan_page(absolute_url, output_folder)
             links_item = links_item + 1
 
 
