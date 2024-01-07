@@ -8,9 +8,6 @@ import logging
 from bs4 import BeautifulSoup
 import requests
 
-#import pdb
-#pdb.set_trace()
-
 def setup_logging(plog_level):
     """Set up logging configuration based on the provided log level."""
     logging.debug(f"setup_logging({plog_level})")
@@ -65,62 +62,6 @@ def getURLData(url):
             print(f"Invalid URL: {e}")
             logging.info(f"scan_page:requests.get({url}) exception {e}")
     return response
-
-def scan_page(url, base_path):
-    """ download a specific url"""
-    # Parse the URL to extract the path
-    #logging.debug(f"scan_page({url}, {base_path})")
-    print(f"scan_page({url}, {base_path})")
-    #pdb.set_trace()
-    #parsed_url = urlparse(url)
-
-    # Log a debug message
-    logging.debug(f"scan_page: {url}")
-
-    response = getURLData(url)
-
-    if response.status_code == 200:
-        try:
-            soup = BeautifulSoup(response.text, 'html.parser')
-
-            # Find all image tags in the HTML
-            img_tags = soup.find_all('img', src=True)
-            #convert to set then back to list to remove duplicates
-            result_set = set(img_tags)
-            img_tags = list(result_set) 
-            get_data(url,base_path,img_tags)
-
-            # Find all links in the HTML
-            links_tags = soup.find_all('a', href=True)
-            #convert to set then back to list to remove duplicates
-            result_set = set(links_tags)
-            links_tags = list(result_set) 
-            get_data(url,base_path,links_tags)
-        except Exception as e:
-            print(f"Error {e} parsing {response.text}")
-            logging.info(f"Error {e} parsing {response.text}")
-    else:
-        logging.debug(f"Failed to fetch page: {url}")
-
-#def scan_page_get_data(url,base_path,tags):
-#    count = len(tags)
-#    print(f"scrape_website({url}) There are {count} items found.")
-#    item = 1
-#    for tag in tags:
-#        print(f"item:{item}",end='')
-#        # Construct absolute URL using urljoin
-#
-#        if ('src' in tag.attrs):
-#            url = urljoin(url, tag['src'])
-#        if ('href' in tag.attrs):
-#            url = urljoin(url, tag['src'])
-#        # Log the URL before downloading
-#        logging.info(f"Downloading : {url}")
-#
-#        # Download each image
-#        download_file(url, base_path)
-#        item = item + 1
-#    return #for debugging purposes
 
 def get_data(pweb_address,output_folder,tags):
     count = len(tags)
@@ -192,27 +133,8 @@ def scrape_website(pweb_address):
     else:
         print(f"Failed to fetch main page: {pweb_address}")
 
-#def scrape_website_get_data(pweb_address,output_folder,tags):
-#    count = len(tags)
-#    item = 1
-#    for tag in tags:
-#        print(f"Processing {pweb_address} item {item} of {count}")
-#        # Construct absolute URL using urljoin
-#        if ('src' in tag.attrs):
-#            url = urljoin(pweb_address, tag['src'])
-#        if ('href' in tag.attrs):
-#            pdf_url = urljoin(pweb_address, tag['href'])
-#        # Log the image URL before downloading
-#        logging.info(f"Downloading data: {pweb_address}")
-#
-#        # Download each image
-#        download_file(pweb_address, output_folder)
-#        item = item + 1
-#    return #for debugging purposes
-
 if __name__ == "__main__":
     logging.debug("__main__")
-    #pdb.set_trace()
     # Create an ArgumentParser object to handle command-line arguments
     parser = argparse.ArgumentParser(description="dynamic logging level")
 
@@ -237,10 +159,8 @@ if __name__ == "__main__":
     loglevel = getattr(logging, args.loglevel)
 
     # Set up logging configuration based on the provided log level
-    #pdb.set_trace()
     print(f"log set to {loglevel}")
     setup_logging(loglevel)
 
     web_address = args.path
-    #pdb.set_trace()
     scrape_website(web_address)
