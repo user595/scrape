@@ -161,26 +161,7 @@ def scrape_website(pweb_address):
         #convert to set then back to list to remove duplicates
         result_set = set(links)
         links = list(result_set) 
-        links_count = len(links)
-        print(f"scrape_website({pweb_address}) There are {links_count} links found.")
-        links_item = 1
-                
-        for link in links:
-            print(f"Processing {pweb_address} link {links_item} of {links_count}")
-            link_url = link['href']
-
-            # Construct absolute URL using urljoin
-            absolute_url = urljoin(pweb_address, link_url)
-
-            # Log the URL before downloading
-            logging.info(f"Downloading page: {absolute_url}")
-
-            # Download each linked webpage
-            #working function but want to temp limit to the specified page only
-            #not downloading the linked pages - works but slow
-            scan_page(absolute_url, output_folder)
-            links_item = links_item + 1
-
+        scrape_website_get_links(pweb_address,links,output_folder)
 
         #download the items on the main page
         # Find all image tags in the HTML
@@ -222,6 +203,25 @@ def scrape_website(pweb_address):
     else:
         print(f"Failed to fetch main page: {pweb_address}")
 
+def scrape_website_get_links(pweb_address,links,output_folder):
+    links_count = len(links)
+    for link in links:
+        print(f"Processing {pweb_address} link {links} of {links_count}")
+        link_url = link['href']
+
+        # Construct absolute URL using urljoin
+        absolute_url = urljoin(pweb_address, link_url)
+
+        # Log the URL before downloading
+        logging.info(f"Downloading page: {absolute_url}")
+
+        # Download each linked webpage
+        #working function but want to temp limit to the specified page only
+        #not downloading the linked pages - works but slow
+        scan_page(absolute_url, output_folder)
+        links_item = links_item + 1
+    return #for debugging purposes
+    
 if __name__ == "__main__":
     logging.debug("__main__")
     #pdb.set_trace()
