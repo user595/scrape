@@ -38,6 +38,7 @@ def setup_logging(plog_level):
 
 def getURLData(url):
     try:
+        response = ""
         # Make a request to the main page to extract links
         response = requests.get(url)
         response.raise_for_status()
@@ -87,78 +88,56 @@ def scan_page(url, base_path):
             #convert to set then back to list to remove duplicates
             result_set = set(img_tags)
             img_tags = list(result_set) 
-            scan_page_get_img(url,base_path,img_tags)
-#            img_count = len(img_tags)
-#            print(f"scrape_website({url}) There are {img_count} images found.")
-#            img_item = 1
-#            for img_tag in img_tags:
-#                print(f"img_item:{img_item}",end='')
-#                # Construct absolute image URL using urljoin
-#                img_url = urljoin(url, img_tag['src'])
-#
-#                # Log the image URL before downloading
-#                logging.info(f"Downloading image: {img_url}")
-#
-#                # Download each image
-#                download_file(img_url, base_path)
-#                img_item = img_item + 1
+            get_data(url,base_path,img_tags)
 
-            # Find all PDF links in the HTML
-            pdf_tags = soup.find_all('a', href=True)
+            # Find all links in the HTML
+            links_tags = soup.find_all('a', href=True)
             #convert to set then back to list to remove duplicates
-            result_set = set(pdf_tags)
-            pdf_tags = list(result_set) 
-            scan_page_get_img(url,base_path,img_tags)
-#            pdf_count = len(pdf_tags)
-#            print(f"scrape_website({url}) There are {pdf_count} pdfs found.")
-#            pdf_item = 1
-#            for pdf_tag in pdf_tags:
-#                print(f"pdf_item:{pdf_item}",end='')
-#                pdf_url = urljoin(url, pdf_tag['href'])
-#
-#                # Log the PDF URL before downloading
-#                logging.info(f"Downloading PDF: {pdf_url}")
-#
-#                # Download each PDF
-#                download_file(pdf_url, base_path)
-#                pdf_item = pdf_item + 1
+            result_set = set(links_tags)
+            links_tags = list(result_set) 
+            get_data(url,base_path,links_tags)
         except Exception as e:
             print(f"Error {e} parsing {response.text}")
             logging.info(f"Error {e} parsing {response.text}")
     else:
         logging.debug(f"Failed to fetch page: {url}")
 
-def scan_page_get_img(url,base_path,img_tags):
-    img_count = len(img_tags)
-    print(f"scrape_website({url}) There are {img_count} images found.")
-    img_item = 1
-    for img_tag in img_tags:
-        print(f"img_item:{img_item}",end='')
-        # Construct absolute image URL using urljoin
-        img_url = urljoin(url, img_tag['src'])
+#def scan_page_get_data(url,base_path,tags):
+#    count = len(tags)
+#    print(f"scrape_website({url}) There are {count} items found.")
+#    item = 1
+#    for tag in tags:
+#        print(f"item:{item}",end='')
+#        # Construct absolute URL using urljoin
+#
+#        if ('src' in tag.attrs):
+#            url = urljoin(url, tag['src'])
+#        if ('href' in tag.attrs):
+#            url = urljoin(url, tag['src'])
+#        # Log the URL before downloading
+#        logging.info(f"Downloading : {url}")
+#
+#        # Download each image
+#        download_file(url, base_path)
+#        item = item + 1
+#    return #for debugging purposes
 
+def get_data(pweb_address,output_folder,tags):
+    count = len(tags)
+    item = 1
+    for tag in tags:
+        print(f"Processing {pweb_address} item {item} of {count}")
+        # Construct absolute URL using urljoin
+        if ('src' in tag.attrs):
+            url = urljoin(pweb_address, tag['src'])
+        if ('href' in tag.attrs):
+            url = urljoin(pweb_address, tag['href'])
         # Log the image URL before downloading
-        logging.info(f"Downloading image: {img_url}")
+        logging.info(f"Downloading data: {url}")
 
         # Download each image
-        download_file(img_url, base_path)
-        img_item = img_item + 1
-    return #for debugging purposes
-
-def scan_page_get_img(url,base_path,img_tags):
-    pdf_count = len(pdf_tags)
-    print(f"scrape_website({url}) There are {pdf_count} pdfs found.")
-    pdf_item = 1
-    for pdf_tag in pdf_tags:
-        print(f"pdf_item:{pdf_item}",end='')
-        pdf_url = urljoin(url, pdf_tag['href'])
-
-        # Log the PDF URL before downloading
-        logging.info(f"Downloading PDF: {pdf_url}")
-
-        # Download each PDF
-        download_file(pdf_url, base_path)
-        pdf_item = pdf_item + 1
+        download_file(url, output_folder)
+        item = item + 1
     return #for debugging purposes
 
 def download_file(file_url, base_path):
@@ -169,16 +148,21 @@ def download_file(file_url, base_path):
 
     file_response = getURLData(file_url)
 
-    file_path = os.path.join(base_path, file_filename)
+    if file_response != '': 
+        if file_response.status_code == 200: 
+        #added to check if valid file i.e. mailto address
 
-    # Check if the file is not a directory before opening it
-    if not os.path.isdir(file_path):
-        with open(file_path, 'wb') as file_file:
-            file_file.write(file_response.content)
+            file_path = os.path.join(base_path, file_filename)
 
-        logging.info(f"File downloaded: {file_url}")
-    else:
-        logging.warning(f"Skipping directory: {file_url}")
+            # Check if the file is not a directory before opening it
+            if not os.path.isdir(file_path):
+                with open(file_path, 'wb') as file_file:
+                    file_file.write(file_response.content)
+
+                logging.info(f"File downloaded: {file_url}")
+            else:
+                logging.warning(f"Skipping directory: {file_url}")
+    return #for debugging purposes
 
 def scrape_website(pweb_address):
     """ Create a folder to store the downloaded webpages"""
@@ -196,7 +180,7 @@ def scrape_website(pweb_address):
         #convert to set then back to list to remove duplicates
         result_set = set(links)
         links = list(result_set) 
-        scrape_website_get_links(pweb_address,links,output_folder)
+        get_data(pweb_address,output_folder,links)
 
         #download the items on the main page
         # Find all image tags in the HTML
@@ -204,92 +188,27 @@ def scrape_website(pweb_address):
         #convert to set then back to list to remove duplicates
         result_set = set(img_tags)
         img_tags = list(result_set) 
-        scrape_website_get_img(pweb_address,output_folder,img_tags)
-#        img_count = len(img_tags)
-#        img_item = 1
-#        for img_tag in img_tags:
-#            print(f"Processing {pweb_address} img {img_item} of {img_count}")
-#            # Construct absolute image URL using urljoin
-#            img_url = urljoin(pweb_address, img_tag['src'])
-#
-#            # Log the image URL before downloading
-#            logging.info(f"Downloading image: {img_url}")
-#
-#            # Download each image
-#            download_file(img_url, output_folder)
-#            img_item = img_item + 1
-
-        # Find all PDF links in the HTML
-        pdf_tags = soup.find_all('a', href=True)
-        #convert to set then back to list to remove duplicates
-        result_set = set(pdf_tags)
-        pdf_tags = list(result_set) 
-        scrape_website_get_pdf(pweb_address,output_folder,pdf_tags)
-#        pdf_count = len(pdf_tags)
-#        print(f"scrape_website({pweb_address}) There are {pdf_count} pdfs found.")
-#        pdf_item = 1
-#        for pdf_tag in pdf_tags:
-#            print(f"Processing {pweb_address} pdf {pdf_item} of {pdf_count}")
-#            pdf_url = urljoin(pweb_address, pdf_tag['href'])##
-#
-#            # Log the PDF URL before downloading
-#            logging.info(f"Downloading PDF: {pdf_url}")
-#            # Download each PDF
-#            download_file(pdf_url, output_folder)
-#            pdf_item = pdf_item + 1
+        get_data(pweb_address,output_folder,img_tags)
     else:
         print(f"Failed to fetch main page: {pweb_address}")
 
-def scrape_website_get_links(pweb_address,links,output_folder):
-    links_count = len(links)
-    links_item = 1
-    for link in links:
-        print(f"Processing {pweb_address} link {links} of {links_count}")
-        link_url = link['href']
-
-        # Construct absolute URL using urljoin
-        absolute_url = urljoin(pweb_address, link_url)
-
-        # Log the URL before downloading
-        logging.info(f"Downloading page: {absolute_url}")
-
-        # Download each linked webpage
-        #working function but want to temp limit to the specified page only
-        #not downloading the linked pages - works but slow
-        scan_page(absolute_url, output_folder)
-        links_item = links_item + 1
-    return #for debugging purposes
-    
-def scrape_website_get_img(pweb_address,output_folder,img_tags):
-    img_count = len(img_tags)
-    img_item = 1
-    for img_tag in img_tags:
-        print(f"Processing {pweb_address} img {img_item} of {img_count}")
-        # Construct absolute image URL using urljoin
-        img_url = urljoin(pweb_address, img_tag['src'])
-
-        # Log the image URL before downloading
-        logging.info(f"Downloading image: {img_url}")
-
-        # Download each image
-        download_file(img_url, output_folder)
-        img_item = img_item + 1
-    return #for debugging purposes
-
-def scrape_website_get_pdf(pweb_address,output_folder,pdf_tags):
-    pdf_count = len(pdf_tags)
-    print(f"scrape_website({pweb_address}) There are {pdf_count} pdfs found.")
-    pdf_item = 1
-    for pdf_tag in pdf_tags:
-        print(f"Processing {pweb_address} pdf {pdf_item} of {pdf_count}")
-        pdf_url = urljoin(pweb_address, pdf_tag['href'])##
-
-        # Log the PDF URL before downloading
-        logging.info(f"Downloading PDF: {pdf_url}")
-        # Download each PDF
-        download_file(pdf_url, output_folder)
-        pdf_item = pdf_item + 1
-    return #for debugging purposes
+#def scrape_website_get_data(pweb_address,output_folder,tags):
+#    count = len(tags)
+#    item = 1
+#    for tag in tags:
+#        print(f"Processing {pweb_address} item {item} of {count}")
+#        # Construct absolute URL using urljoin
+#        if ('src' in tag.attrs):
+#            url = urljoin(pweb_address, tag['src'])
+#        if ('href' in tag.attrs):
+#            pdf_url = urljoin(pweb_address, tag['href'])
+#        # Log the image URL before downloading
+#        logging.info(f"Downloading data: {pweb_address}")
+#
+#        # Download each image
+#        download_file(pweb_address, output_folder)
+#        item = item + 1
+#    return #for debugging purposes
 
 if __name__ == "__main__":
     logging.debug("__main__")
@@ -300,8 +219,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--path",
         help="the http path i.e. https://www.pollardbanknote.com/company/",
-        #default="https://www.pollardbanknote.com/company/"
-        default="https://www.lottery.ok.gov/scratchers/492108"
+        default="https://www.pollardbanknote.com/company/"
+        #default="https://www.lottery.ok.gov/scratchers/492108"
+        #default="https://www.gutenberg.org/ebooks/2701"
     )
     parser.add_argument(
         "--loglevel",
